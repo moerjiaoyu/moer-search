@@ -1,0 +1,126 @@
+syntax = "proto3";
+
+package com.moer.search;
+
+import "com/moer/base/base.proto";
+import "google/protobuf/any.proto";
+option java_multiple_files = true;
+option java_package = "com.moer.search.message";
+option java_outer_classname = "EsIndexServiceOut";
+//索引数据服务
+service EsIndexService {
+  //根据索引名称查询索引详情
+  rpc getIndexInfoByIndexName (IndexNameRequest) returns (com.moer.base.GrpcResult) {
+    // 输入参数为 DocumentIdRequest 消息
+    // 返回 GrpcResult 消息
+  }
+
+  //获取所有的索引
+  rpc indices (IndicesRequest) returns (com.moer.base.GrpcResult) {
+    // 输入参数为 DocumentIdRequest 消息
+    // 返回 GrpcResult 消息
+  }
+  //创建索引
+  rpc createIndiceMapping (CreateIndiceMappingRequest) returns (com.moer.base.GrpcResult) {
+    // 输入参数为 CreateIndiceMappingRequest 消息
+    // 返回 GrpcResult 消息
+  }
+  //更新索引
+  rpc updateIndiceMapping (UpdateIndiceMappingRequest) returns (com.moer.base.GrpcResult) {
+    // 输入参数为 CreateIndiceMappingRequest 消息
+    // 返回 GrpcResult 消息
+  }
+  //删除索引
+  rpc dropIndice (DropIndiceRequest) returns (com.moer.base.GrpcResult) {
+    // 输入参数为 DropIndiceRequest 消息
+    // 返回 GrpcResult 消息
+  }
+  //关闭索引
+  rpc closeIndex (CloseIndiceRequest) returns (com.moer.base.GrpcResult) {
+    // 输入参数为 DropIndiceRequest 消息
+    // 返回 GrpcResult 消息
+  }
+  //开启索引
+  rpc openIndex (OpenIndiceRequest) returns (com.moer.base.GrpcResult) {
+    // 输入参数为 DropIndiceRequest 消息
+    // 返回 GrpcResult 消息
+  }
+
+  //添加索引别名
+  rpc addAlias (AddAliasRequest) returns (com.moer.base.GrpcResult) {
+    // 输入参数为 DropIndiceRequest 消息
+    // 返回 GrpcResult 消息
+  }
+
+  //查询所有索引别名
+  rpc getAllAliases (GetAllAliasesRequest) returns (com.moer.base.GrpcResult) {
+    // 输入参数为 DropIndiceRequest 消息
+    // 返回 GrpcResult 消息
+  }
+
+  //添加索引别名
+  rpc removeAlias (RemoveAliasRequest) returns (com.moer.base.GrpcResult) {
+    // 输入参数为 DropIndiceRequest 消息
+    // 返回 GrpcResult 消息
+  }
+
+}
+message RemoveAliasRequest{
+  //索引名称
+  string indexName = 1;
+  //别名
+  string alias = 2;
+}
+message AddAliasRequest{
+  //索引名称
+  string indexName = 1;
+  //别名
+  string alias = 2;
+}
+
+message GetAllAliasesRequest{
+  //索引名称
+  string indexName = 1;
+  //别名
+  string alias = 2;
+}
+
+message CloseIndiceRequest{
+  //索引名称
+  string indexName = 1;
+}
+
+message OpenIndiceRequest{
+  //索引名称
+  string indexName = 1;
+}
+message IndicesRequest{
+
+}
+
+message IndexNameRequest {
+  //索引名称
+  string indexName = 1;
+}
+
+//创建索引入参
+message CreateIndiceMappingRequest{
+  //索引名称
+  string indexName = 1;
+  //索引结构[settings、mappings]使用json字符串传递{"settings":{"number_of_shards":1,"number_of_replicas":1},"mappings":{"properties":{"field1":{"type":"text"},"field2":{"type":"keyword"}}}}
+  string obj = 2;
+}
+
+//更新索引入参
+message UpdateIndiceMappingRequest{
+  //索引名称
+  string indexName = 1;
+  //索引结构字段[properties]使用json字符串传递 {"properties":{"field1":{"type":"text"},"field2":{"type":"keyword"},"field3":{"type":"keyword"}}}
+  string obj = 2;
+}
+
+//删除索引入参
+message DropIndiceRequest{
+  //索引名称
+  string indexName = 1;
+}

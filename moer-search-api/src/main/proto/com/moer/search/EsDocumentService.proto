@@ -1,0 +1,145 @@
+syntax = "proto3";
+
+package com.moer.search;
+
+import "com/moer/base/base.proto";
+import "google/protobuf/any.proto";
+option java_multiple_files = true;
+option java_package = "com.moer.search.message";
+option java_outer_classname = "EsDocumentServiceOut";
+
+
+//索引数据服务
+service EsDocumentService {
+  //根据索引id查询数据
+  rpc getDocumentById (DocumentIdRequest) returns (com.moer.base.GrpcResult) {
+    // 输入参数为 DocumentIdRequest 消息
+    // 返回 GrpcResult 消息
+  }
+
+  //根据索引id集合批量查询数据
+  rpc getDocumentsByIds (DocumentIdsRequest) returns (com.moer.base.GrpcResult) {
+    // 输入参数为 DocumentIdRequest 消息
+    // 返回 GrpcResult 消息
+  }
+
+  //根据索引id删除索引数据
+  rpc deleteDocumentById (DocumentIdRequest) returns (com.moer.base.GrpcResult) {
+    // 输入参数为 DocumentIdRequest 消息
+    // 返回 GrpcResult 消息
+  }
+
+  //根据索引id集合批量删除数据
+  rpc batchDeleteDocumentsByIds (DocumentIdsRequest) returns (com.moer.base.GrpcResult) {
+    // 输入参数为 DocumentIdRequest 消息
+    // 返回 GrpcResult 消息
+  }
+
+  //添加单条索引数据
+  rpc saveDocument (SaveDocumentequest) returns (com.moer.base.GrpcResult) {
+    // 输入参数为 SaveDocumentequest 消息
+    // 返回 GrpcResult 消息
+  }
+
+  //批量添加多条索引数据
+  rpc batchSaveDocuments (BatchSaveDocumentRequest) returns (com.moer.base.GrpcResult) {
+    // 输入参数为 BatchSaveDocumentRequest 消息
+    // 返回 GrpcResult 消息
+  }
+
+  //更新单条索引数据
+  rpc updateDocument (UpdateDocumentequest) returns (com.moer.base.GrpcResult) {
+    // 输入参数为 UpdateDocumentequest 消息
+    // 返回 GrpcResult 消息
+  }
+
+  //批量更新多条索引数据
+  rpc batchUpdateDocuments (BatchUpdateDocumentRequest) returns (com.moer.base.GrpcResult) {
+    // 输入参数为 BatchUpdateDocumentRequest 消息
+    // 返回 GrpcResult 消息
+  }
+
+  //获取当前索引的文档总条数
+  rpc countDocumentsByIndexName (CountDocumentRequest) returns (com.moer.base.GrpcResult) {
+    // 输入参数为 CountDocumentRequest 消息
+    // 返回 GrpcResult 消息
+  }
+
+  //通过dsl检索数据查询索引数据
+  rpc searchDocumentsByDsl (DocumentsByDslDocumentRequest) returns (com.moer.base.GrpcResult) {
+    // 输入参数为 DocumentsByDslDocumentRequest 消息
+    // 返回 GrpcResult 消息
+  }
+
+  //通过dsl检索数据删除索引数据
+  rpc deleteDocumentsByDsl (DocumentsByDslDocumentRequest) returns (com.moer.base.GrpcResult) {
+    // 输入参数为 DocumentsByDslDocumentRequest 消息
+    // 返回 GrpcResult 消息
+  }
+
+  //通过dsl检索数据更新索引数据
+  rpc updateDocumentsByDsl (DocumentsByDslDocumentRequest) returns (com.moer.base.GrpcResult) {
+    // 输入参数为 DocumentsByDslDocumentRequest 消息
+    // 返回 GrpcResult 消息
+  }
+
+
+}
+
+message DocumentsByDslDocumentRequest{
+  //索引名称
+  string indexName = 1;
+  //dslStr字符串
+  string dslStr = 2;
+}
+
+message CountDocumentRequest{
+  //索引对象
+  com.moer.base.IndexNameInfo  indexNameInfo = 1;
+}
+
+message DocumentIdRequest {
+  //索引名称
+  string indexName = 1;
+  //索引数据id
+  string id = 2;
+}
+
+message DocumentIdsRequest {
+  //索引名称
+  string indexName = 1;
+  //索引数据集合ids
+  repeated string ids = 2;
+}
+
+message SaveDocumentequest {
+  //索引数据
+  DocumentData data = 1;
+}
+
+message BatchSaveDocumentRequest {
+  //索引数据List
+  repeated DocumentData data = 1;
+}
+
+message UpdateDocumentequest {
+  //索引数据
+  DocumentData data = 1;
+}
+
+message BatchUpdateDocumentRequest {
+  //索引数据List
+  repeated DocumentData data = 1;
+}
+
+//索引数据实体
+message DocumentData {
+  //索引名称
+  string  indexName = 1;
+  //索引数据id
+  string  id = 2;
+  //索引routing
+  string  routing = 3;
+  //索引数据 使用json字符串传递
+  string obj = 4;
+}

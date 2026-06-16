@@ -1,0 +1,21 @@
+syntax = "proto3";
+package com.moer.base;
+
+import "google/protobuf/any.proto";
+option java_multiple_files = true;
+option java_package = "com.moer.base.lib";
+option java_outer_classname = "BaseProto";
+
+message GrpcResult{
+  //请求状态码
+  string code = 1;
+  //请求状态消息
+  string message = 2;
+  //请求响应数据data 只有两种情况boolean和String
+  google.protobuf.Any data = 3;
+}
+
+message IndexNameInfo{
+  //索引名称
+  string indexName = 1;
+}

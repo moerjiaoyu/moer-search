@@ -1,0 +1,73 @@
+{
+  "index_patterns": ["moer_ontology_*"],
+  "template": {
+    "settings": {
+      "number_of_shards": 3,
+      "number_of_replicas": 1,
+      "index.lifecycle.name": "ontology_policy",
+      "index.lifecycle.rollover_alias": "moer_ontology"
+    },
+    "mappings": {
+      "properties": {
+        "concept_id": {
+          "type": "keyword"
+        },
+        "concept_name": {
+          "type": "text",
+          "analyzer": "ik_smart",
+          "search_analyzer": "ik_max_word"
+        },
+        "concept_name_en": {
+          "type": "text",
+          "analyzer": "standard"
+        },
+        "description": {
+          "type": "text",
+          "analyzer": "ik_smart",
+          "search_analyzer": "ik_max_word"
+        },
+        "parents": {
+          "type": "keyword"
+        },
+        "children": {
+          "type": "keyword"
+        },
+        "relations": {
+          "type": "nested",
+          "properties": {
+            "type": {
+              "type": "keyword"
+            },
+            "target_id": {
+              "type": "keyword"
+            }
+          }
+        },
+        "semantic_type": {
+          "type": "keyword"
+        },
+        "domain": {
+          "type": "keyword"
+        },
+        "is_abstract": {
+          "type": "boolean"
+        },
+        "synonyms": {
+          "type": "keyword"
+        },
+        "attributes": {
+          "type": "keyword"
+        },
+        "create_time": {
+          "type": "date",
+          "format": "epoch_millis"
+        },
+        "update_time": {
+          "type": "date",
+          "format": "epoch_millis"
+        }
+      }
+    }
+  },
+  "priority": 500
+}

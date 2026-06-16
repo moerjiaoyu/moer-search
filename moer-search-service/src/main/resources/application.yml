@@ -1,0 +1,54 @@
+grpc:
+  server:
+    port: ${GRPC_SERVER_PORT:19998}
+  client:
+    GLOBAL:
+      negotiation-type: plaintext
+      enable-keep-alive: true
+      keep-alive-without-calls: true
+
+server:
+  port: ${SERVER_PORT:8082}
+spring:
+  application:
+    name: ${APPLICATION_NAME:moer-search-service}
+  mvc:
+    pathmatch:
+      matching-strategy: ant_path_matcher
+  elasticsearch:
+    bboss:
+      elasticUser: ${ELASTICSEARCH_USERNAME:elastic}
+      elasticPassword: ${ELASTICSEARCH_PASSWORD:changeme}
+      elasticsearch:
+        rest:
+          hostNames: ${ELASTICSEARCH_HOSTNAMES:localhost:9200}
+        timeZone: Asia/Shanghai
+        showTemplate: true
+        discoverHost: false
+      dslfile:
+        refreshInterval: -1
+      http:
+        timeoutConnection: 50000
+        timeoutSocket: 50000
+        connectionRequestTimeout: 50000
+        retryTime: 1
+        maxLineLength: -1
+        maxHeaderCount: 200
+        maxTotal: 400
+        defaultMaxPerRoute: 200
+        soReuseAddress: false
+        soKeepAlive: false
+        timeToLive: 3600000
+        keepAlive: 3600000
+        keystore:
+        keyPassword:
+        hostnameVerifier:
+logging:
+  level:
+    bboss: INFO
+    com.moer.search: INFO
+    com.frameworkset: INFO
+    org:
+      apache: INFO
+      bboss: INFO
+      frameworkset: INFO
