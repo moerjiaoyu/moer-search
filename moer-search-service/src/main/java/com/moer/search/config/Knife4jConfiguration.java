@@ -44,7 +44,7 @@ public class Knife4jConfiguration {
                 .apiInfo(new ApiInfoBuilder()
                         .title("分布式搜索引擎More Search服务")
                         .description("分布式搜索引擎More Search服务")
-                        .termsOfServiceUrl("http://www.xx.com/")
+                        .termsOfServiceUrl("https://www.moerjiaoyu.com/")
                         .version("1.0.0")
                         .build())
                 //分组名称
