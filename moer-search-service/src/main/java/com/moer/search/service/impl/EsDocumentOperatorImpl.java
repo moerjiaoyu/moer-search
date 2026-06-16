@@ -864,6 +864,89 @@ public class EsDocumentOperatorImpl implements EsDocumentOperatorInterface {
         }
     }
 
+    /**
+     * 通过 SQL 查询索引数据
+     *
+     * @param sql SQL 查询语句
+     * @return 查询结果
+     */
+    @Override
+    public Map<String, Object> searchBySql(String sql) {
+        EsDetail esDetail = new EsDetail();
+        try {
+            long start = System.currentTimeMillis();
+            long clientStart = System.currentTimeMillis();
+            
+            ResponseEnum.BUSINESS_ES_OPERATION_ID_FAIL.assertIsFalse(StringUtils.isBlank(sql));
+            
+            ClientInterface clientUtil = ElasticSearchHelper.getRestClientUtil();
+            ElasticSearchRestClient client = clientUtil.getClient();
+            
+            String path = "/_sql";
+            String requestBody = "{\"query\": \"" + sql.replace("\"", "\\\"") + "\"}";
+            
+            String result = client.executeHttp(path, requestBody, ClientUtil.HTTP_POST);
+            log.info("SQL查询响应参数：{}", result);
+            
+            long clientTime = System.currentTimeMillis() - clientStart;
+            esDetail.setClientConnectionTime(clientTime);
+            long betweenDate = System.currentTimeMillis() - start;
+            esDetail.setTook(betweenDate);
+            esDetail.setIsTimedOut(false);
+            StackTraceElement stackTraceElement = Thread.currentThread().getStackTrace()[1];
+            esDetail.setOperation(operation(stackTraceElement));
+            esDetail.setDsl(sql);
+            
+            JSONObject jsonObject = JSON.parseObject(result);
+            Map<String, Object> resultMap = new HashMap<>();
+            
+            if (jsonObject.containsKey("columns") && jsonObject.containsKey("rows")) {
+                JSONArray columns = jsonObject.getJSONArray("columns");
+                JSONArray rows = jsonObject.getJSONArray("rows");
+                
+                List<String> columnNames = new ArrayList<>();
+                for (Object columnObj : columns) {
+                    JSONObject column = (JSONObject) columnObj;
+                    columnNames.add(column.getString("name"));
+                }
+                
+                List<Map<String, Object>> rowsList = new ArrayList<>();
+                for (Object rowObj : rows) {
+                    JSONArray row = (JSONArray) rowObj;
+                    Map<String, Object> rowMap = new LinkedHashMap<>();
+                    for (int i = 0; i < columnNames.size(); i++) {
+                        rowMap.put(columnNames.get(i), row.get(i));
+                    }
+                    rowsList.add(rowMap);
+                }
+                
+                resultMap.put("rows", rowsList);
+                resultMap.put("columns", columns);
+            }
+            
+            if (jsonObject.containsKey("total")) {
+                resultMap.put("total", jsonObject.getLong("total"));
+            }
+            if (jsonObject.containsKey("size")) {
+                resultMap.put("size", jsonObject.getInteger("size"));
+            }
+            
+            if (jsonObject.containsKey("aggregations")) {
+                resultMap.put("aggregations", jsonObject.get("aggregations"));
+            }
+            
+            log.info("ES SQL查询成功, SQL:{}, 耗时:{}ms", sql, betweenDate);
+            return resultMap;
+            
+        } catch (Exception e) {
+            ExceptionUtils.exception(esDetail, e);
+            log.error("ES SQL查询失败, SQL:{}, 错误:{}", sql, e.getMessage());
+            return null;
+        } finally {
+            EsThreadLocal.setEsDetail(Collections.singletonList(esDetail));
+        }
+    }
+
     private String operation(StackTraceElement stackTraceElement) {
         return stackTraceElement.getClassName() + "." + stackTraceElement.getMethodName() + "(...)";
     }

@@ -142,4 +142,12 @@ public interface EsDocumentOperatorInterface {
      * @return
      */
     Boolean updateDocumentsByDsl(String dslStr, String indexName);
+
+    /**
+     * 通过 SQL 查询索引数据
+     *
+     * @param sql SQL 查询语句
+     * @return 查询结果
+     */
+    Map<String, Object> searchBySql(String sql);
 }

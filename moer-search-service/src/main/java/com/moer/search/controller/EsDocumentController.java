@@ -236,4 +236,16 @@ public class EsDocumentController {
                                            @RequestBody RequestDslDTO searchRequest) {
         return RestResult.success(esOperatorInterface.updateDocumentsByDsl(searchRequest.getDslStr(), indexName));
     }
+
+    /**
+     * 通过 SQL 查询索引数据
+     *
+     * @param sql SQL 查询语句
+     * @return 查询结果
+     */
+    @ApiOperation(value = "通过 SQL 查询索引数据")
+    @PostMapping("/searchBySql")
+    public RestResult searchBySql(@RequestBody String sql) {
+        return RestResult.success(esOperatorInterface.searchBySql(sql));
+    }
 }
