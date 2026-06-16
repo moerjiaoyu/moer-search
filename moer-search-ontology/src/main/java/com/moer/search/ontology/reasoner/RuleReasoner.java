@@ -116,6 +116,15 @@ public class RuleReasoner {
         public String getTargetId() { return targetId; }
         public String getRelationType() { return relationType; }
         public String getRuleName() { return ruleName; }
+        
+        /**
+         * 获取置信度
+         * 
+         * @return 置信度值（默认1.0）
+         */
+        public double getConfidence() {
+            return 1.0;
+        }
     }
 
     /**

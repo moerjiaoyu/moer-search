@@ -68,6 +68,16 @@ public class SubclassReasoner {
     }
 
     /**
+     * 更新概念
+     * 
+     * @param concept 概念对象
+     */
+    public void updateConcept(Concept concept) {
+        conceptCache.put(concept.getConceptId(), concept);
+        invalidateCaches();
+    }
+
+    /**
      * 获取直接子类
      * 
      * @param conceptId 概念ID

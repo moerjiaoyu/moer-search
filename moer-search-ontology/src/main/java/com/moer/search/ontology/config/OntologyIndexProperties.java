@@ -2,7 +2,6 @@ package com.moer.search.ontology.config;
 
 import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;
-import org.springframework.stereotype.Component;
 
 /**
  * 本体索引配置属性类
@@ -31,7 +30,6 @@ import org.springframework.stereotype.Component;
  * @version 1.0.0
  */
 @Data
-@Component
 @ConfigurationProperties(prefix = "ontology.index")
 public class OntologyIndexProperties {
 

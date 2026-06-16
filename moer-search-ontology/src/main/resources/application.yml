@@ -1,0 +1,38 @@
+server:
+  port: 8084
+
+spring:
+  application:
+    name: moer-search-ontology
+  mvc:
+    pathmatch:
+      matching-strategy: ant_path_matcher
+  elasticsearch:
+    bboss:
+      elasticUser: ${ELASTICSEARCH_USERNAME:elastic}
+      elasticPassword: ${ELASTICSEARCH_PASSWORD:changeme}
+      elasticsearch:
+        rest:
+          hostNames: ${ELASTICSEARCH_HOSTNAMES:localhost:9200}
+        timeZone: Asia/Shanghai
+
+logging:
+  level:
+    com.moer.search.ontology: INFO
+    org.springframework: INFO
+    com.bbossgroups: INFO
+
+ontology:
+  index:
+    concept-index-prefix: moer_ontology
+    document-index-prefix: moer_documents
+    lifecycle-enabled: true
+    lifecycle-policy-name: ontology_policy
+    hot-phase-days: 30
+    warm-phase-days: 90
+    cold-phase-days: 180
+    delete-phase-days: 365
+    shards: 3
+    replicas: 1
+    default-analyzer: ik_smart
+    search-analyzer: ik_max_word

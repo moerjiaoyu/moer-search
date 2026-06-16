@@ -90,11 +90,13 @@ public class MoerOntologyEngine {
      * 添加概念
      * 
      * @param concept 概念对象
+     * @return 添加后的概念对象
      */
-    public void addConcept(Concept concept) {
+    public Concept addConcept(Concept concept) {
         ontologyStore.saveConcept(concept);
         subclassReasoner.addConcept(concept);
         log.info("Concept added: {}", concept.getConceptId());
+        return concept;
     }
 
     /**
@@ -131,12 +133,18 @@ public class MoerOntologyEngine {
      * 删除概念
      * 
      * @param conceptId 概念ID
+     * @return 删除成功返回true，失败返回false
      */
-    public void deleteConcept(String conceptId) {
+    public boolean deleteConcept(String conceptId) {
+        Concept concept = ontologyStore.getConcept(conceptId);
+        if (concept == null) {
+            return false;
+        }
         ontologyStore.deleteConcept(conceptId);
         subclassReasoner.removeConcept(conceptId);
         refreshReasoners();
         log.info("Concept deleted: {}", conceptId);
+        return true;
     }
 
     /**
@@ -343,6 +351,181 @@ public class MoerOntologyEngine {
      */
     public List<Concept> searchConcepts(String keyword) {
         return ontologyStore.searchConcepts(keyword);
+    }
+
+    /**
+     * 搜索概念（带分页）
+     * 
+     * @param keyword 搜索关键词
+     * @param pageNum 页码（从1开始）
+     * @param pageSize 每页大小
+     * @return 包含结果列表和总数的Map
+     */
+    public Map<String, Object> searchConcepts(String keyword, Integer pageNum, Integer pageSize) {
+        List<Concept> results = ontologyStore.searchConcepts(keyword);
+        Map<String, Object> resultMap = new HashMap<>();
+        
+        int total = results.size();
+        int fromIndex = (pageNum - 1) * pageSize;
+        int toIndex = Math.min(fromIndex + pageSize, total);
+        
+        if (fromIndex >= total) {
+            resultMap.put("data", new ArrayList<>());
+        } else {
+            resultMap.put("data", results.subList(fromIndex, toIndex));
+        }
+        resultMap.put("total", total);
+        resultMap.put("pageNum", pageNum);
+        resultMap.put("pageSize", pageSize);
+        
+        return resultMap;
+    }
+
+    /**
+     * 更新概念
+     * 
+     * @param concept 概念对象
+     * @return 更新后的概念对象，如果不存在返回null
+     */
+    public Concept updateConcept(Concept concept) {
+        Concept existing = ontologyStore.getConcept(concept.getConceptId());
+        if (existing == null) {
+            return null;
+        }
+        ontologyStore.saveConcept(concept);
+        subclassReasoner.updateConcept(concept);
+        refreshReasoners();
+        log.info("Concept updated: {}", concept.getConceptId());
+        return concept;
+    }
+
+    /**
+     * 获取直接子类
+     * 
+     * @param conceptId 概念ID
+     * @return 直接子类ID集合
+     */
+    public Set<String> getDirectSubclasses(String conceptId) {
+        return subclassReasoner.getDirectSubclasses(conceptId);
+    }
+
+    /**
+     * 获取直接父类
+     * 
+     * @param conceptId 概念ID
+     * @return 直接父类ID集合
+     */
+    public Set<String> getDirectSuperclasses(String conceptId) {
+        return subclassReasoner.getDirectSuperclasses(conceptId);
+    }
+
+    /**
+     * 获取子概念对象列表
+     * 
+     * @param conceptId 概念ID
+     * @return 子概念对象列表
+     */
+    public List<Concept> getChildConcepts(String conceptId) {
+        Set<String> childIds = getDirectSubclasses(conceptId);
+        List<Concept> children = new ArrayList<>();
+        for (String childId : childIds) {
+            Concept child = ontologyStore.getConcept(childId);
+            if (child != null) {
+                children.add(child);
+            }
+        }
+        return children;
+    }
+
+    /**
+     * 获取父概念对象列表
+     * 
+     * @param conceptId 概念ID
+     * @return 父概念对象列表
+     */
+    public List<Concept> getParentConcepts(String conceptId) {
+        Set<String> parentIds = getDirectSuperclasses(conceptId);
+        List<Concept> parents = new ArrayList<>();
+        for (String parentId : parentIds) {
+            Concept parent = ontologyStore.getConcept(parentId);
+            if (parent != null) {
+                parents.add(parent);
+            }
+        }
+        return parents;
+    }
+
+    /**
+     * 查询扩展
+     * 
+     * @param query 查询词
+     * @param expandType 扩展类型（synonym: 同义词扩展, semantic: 语义扩展, concept: 概念扩展）
+     * @return 扩展后的查询词列表
+     */
+    public List<String> expandQuery(String query, String expandType) {
+        List<String> expanded = new ArrayList<>();
+        expanded.add(query);
+        
+        Concept concept = ontologyStore.getConcept(query.toLowerCase());
+        if (concept != null && concept.getSynonyms() != null) {
+            expanded.addAll(concept.getSynonyms());
+        }
+        
+        Set<String> related = getRelatedConcepts(query, null);
+        if (related != null && !related.isEmpty()) {
+            expanded.addAll(related);
+        }
+        
+        return expanded;
+    }
+
+    /**
+     * 应用规则推理
+     * 
+     * @param input 输入数据
+     * @return 推理结果列表
+     */
+    public List<Map<String, Object>> applyRules(Map<String, Object> input) {
+        List<Map<String, Object>> results = new ArrayList<>();
+        List<RuleReasoner.InferredRelation> inferredRelations = inferRelations();
+        
+        for (RuleReasoner.InferredRelation relation : inferredRelations) {
+            Map<String, Object> result = new HashMap<>();
+            result.put("source", relation.getSourceId());
+            result.put("target", relation.getTargetId());
+            result.put("relationType", relation.getRelationType());
+            result.put("confidence", relation.getConfidence());
+            results.add(result);
+        }
+        
+        return results;
+    }
+
+    /**
+     * 获取传递闭包
+     * 
+     * @param conceptId 概念ID
+     * @param relationType 关系类型
+     * @return 传递闭包中的概念ID集合
+     */
+    public Set<String> getTransitiveClosure(String conceptId, String relationType) {
+        return transitiveReasoner.getRelatedConcepts(conceptId, relationType);
+    }
+
+    /**
+     * 查找路径
+     * 
+     * @param sourceId 源概念ID
+     * @param targetId 目标概念ID
+     * @return 路径列表（每条路径是概念ID列表）
+     */
+    public List<List<String>> findPath(String sourceId, String targetId) {
+        List<List<String>> paths = new ArrayList<>();
+        List<String> path = getRelationPath(sourceId, targetId, "is_a");
+        if (!path.isEmpty()) {
+            paths.add(path);
+        }
+        return paths;
     }
 
     /**
