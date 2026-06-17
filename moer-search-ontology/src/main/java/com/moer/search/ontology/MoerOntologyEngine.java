@@ -1,5 +1,6 @@
 package com.moer.search.ontology;
 
+import com.moer.search.ontology.model.Action;
 import com.moer.search.ontology.model.Concept;
 import com.moer.search.ontology.model.Instance;
 import com.moer.search.ontology.model.Relation;
@@ -626,5 +627,224 @@ public class MoerOntologyEngine {
     public void addCustomRule(String name, String pattern, RuleReasoner.RuleAction action) {
         ruleReasoner.addCustomRule(name, pattern, action);
         log.info("Custom rule added: {}", name);
+    }
+
+    // ==================== Action Management ====================
+
+    /**
+     * 添加动作
+     * 
+     * @param action 动作对象
+     * @return 添加后的动作对象
+     */
+    public Action addAction(Action action) {
+        ontologyStore.saveAction(action);
+        log.info("Action added: {}", action.getActionId());
+        return action;
+    }
+
+    /**
+     * 批量添加动作
+     * 
+     * @param actions 动作列表
+     */
+    public void addActions(List<Action> actions) {
+        ontologyStore.saveActions(actions);
+        log.info("Batch added {} actions", actions.size());
+    }
+
+    /**
+     * 获取动作
+     * 
+     * @param actionId 动作ID
+     * @return 动作对象，如果不存在返回null
+     */
+    public Action getAction(String actionId) {
+        return ontologyStore.getAction(actionId);
+    }
+
+    /**
+     * 获取所有动作
+     * 
+     * @return 动作列表
+     */
+    public List<Action> getAllActions() {
+        return ontologyStore.getAllActions();
+    }
+
+    /**
+     * 获取启用的动作
+     * 
+     * @return 启用的动作列表
+     */
+    public List<Action> getEnabledActions() {
+        return ontologyStore.getEnabledActions();
+    }
+
+    /**
+     * 根据类型获取动作
+     * 
+     * @param actionType 动作类型
+     * @return 动作列表
+     */
+    public List<Action> getActionsByType(Action.ActionType actionType) {
+        return ontologyStore.getActionsByType(actionType);
+    }
+
+    /**
+     * 根据领域获取动作
+     * 
+     * @param domain 领域名称
+     * @return 动作列表
+     */
+    public List<Action> getActionsByDomain(String domain) {
+        return ontologyStore.getActionsByDomain(domain);
+    }
+
+    /**
+     * 根据概念获取动作
+     * 
+     * @param conceptId 概念ID
+     * @return 动作列表
+     */
+    public List<Action> getActionsByConcept(String conceptId) {
+        return ontologyStore.getActionsByConcept(conceptId);
+    }
+
+    /**
+     * 删除动作
+     * 
+     * @param actionId 动作ID
+     * @return 删除成功返回true，失败返回false
+     */
+    public boolean deleteAction(String actionId) {
+        Action action = ontologyStore.getAction(actionId);
+        if (action == null) {
+            return false;
+        }
+        ontologyStore.deleteAction(actionId);
+        log.info("Action deleted: {}", actionId);
+        return true;
+    }
+
+    /**
+     * 更新动作
+     * 
+     * @param action 动作对象
+     * @return 更新后的动作对象，如果不存在返回null
+     */
+    public Action updateAction(Action action) {
+        Action existing = ontologyStore.getAction(action.getActionId());
+        if (existing == null) {
+            return null;
+        }
+        ontologyStore.saveAction(action);
+        log.info("Action updated: {}", action.getActionId());
+        return action;
+    }
+
+    /**
+     * 搜索动作
+     * 
+     * @param keyword 搜索关键词
+     * @return 匹配的动作列表
+     */
+    public List<Action> searchActions(String keyword) {
+        return ontologyStore.searchActions(keyword);
+    }
+
+    /**
+     * 获取动作数量
+     * 
+     * @return 动作数量
+     */
+    public long getActionCount() {
+        return ontologyStore.getActionCount();
+    }
+
+    /**
+     * 意图识别 - 根据用户查询匹配最合适的动作
+     * 
+     * @param query 用户查询
+     * @param topN 返回前N个匹配结果
+     * @return 匹配的动作列表（按置信度排序）
+     */
+    public List<Map<String, Object>> recognizeIntent(String query, int topN) {
+        List<Map<String, Object>> results = new ArrayList<>();
+        List<Action> allActions = ontologyStore.getEnabledActions();
+        
+        for (Action action : allActions) {
+            double confidence = calculateConfidence(query, action);
+            if (confidence > 0) {
+                Map<String, Object> match = new HashMap<>();
+                match.put("action", action);
+                match.put("confidence", confidence);
+                results.add(match);
+            }
+        }
+        
+        results.sort((a, b) -> Double.compare(
+            (Double) b.get("confidence"), 
+            (Double) a.get("confidence")
+        ));
+        
+        if (results.size() > topN) {
+            return results.subList(0, topN);
+        }
+        return results;
+    }
+
+    /**
+     * 计算查询与动作的匹配置信度
+     * 
+     * @param query 用户查询
+     * @param action 动作对象
+     * @return 置信度（0-1）
+     */
+    private double calculateConfidence(String query, Action action) {
+        double confidence = 0.0;
+        String lowerQuery = query.toLowerCase();
+        
+        // 检查动作名称匹配
+        if (action.getActionName() != null && action.getActionName().toLowerCase().contains(lowerQuery)) {
+            confidence += 0.4;
+        }
+        
+        // 检查英文名称匹配
+        if (action.getActionNameEn() != null && action.getActionNameEn().toLowerCase().contains(lowerQuery)) {
+            confidence += 0.2;
+        }
+        
+        // 检查同义词匹配
+        if (action.getSynonyms() != null) {
+            for (String synonym : action.getSynonyms()) {
+                if (synonym.toLowerCase().contains(lowerQuery)) {
+                    confidence += 0.2;
+                    break;
+                }
+            }
+        }
+        
+        // 检查示例匹配
+        if (action.getExamples() != null) {
+            for (String example : action.getExamples()) {
+                if (example.toLowerCase().contains(lowerQuery)) {
+                    confidence += 0.15;
+                    break;
+                }
+            }
+        }
+        
+        // 检查描述匹配
+        if (action.getDescription() != null && action.getDescription().toLowerCase().contains(lowerQuery)) {
+            confidence += 0.15;
+        }
+        
+        // 检查触发条件匹配
+        if (action.getTrigger() != null && action.getTrigger().toLowerCase().contains(lowerQuery)) {
+            confidence += 0.1;
+        }
+        
+        return Math.min(confidence, 1.0);
     }
 }

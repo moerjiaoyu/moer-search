@@ -1,6 +1,7 @@
 package com.moer.search.ontology.storage;
 
 import com.alibaba.fastjson2.JSON;
+import com.moer.search.ontology.model.Action;
 import com.moer.search.ontology.model.Concept;
 import com.moer.search.ontology.model.Instance;
 import com.moer.search.ontology.model.Relation;
@@ -56,6 +57,9 @@ public class OntologyStore {
 
     /** 实例存储 */
     private final Map<String, Instance> instanceStore = new HashMap<>();
+
+    /** 动作存储 */
+    private final Map<String, Action> actionStore = new HashMap<>();
 
     /**
      * 初始化方法
@@ -350,6 +354,147 @@ public class OntologyStore {
     }
 
     /**
+     * 保存动作
+     * 
+     * @param action 动作对象
+     */
+    public void saveAction(Action action) {
+        action.setUpdateTime(System.currentTimeMillis());
+        if (action.getCreateTime() == null) {
+            action.setCreateTime(System.currentTimeMillis());
+        }
+        actionStore.put(action.getActionId(), action);
+        log.debug("Action saved: {}", action.getActionId());
+    }
+
+    /**
+     * 批量保存动作
+     * 
+     * @param actions 动作列表
+     */
+    public void saveActions(List<Action> actions) {
+        for (Action action : actions) {
+            saveAction(action);
+        }
+        log.info("Batch saved {} actions", actions.size());
+    }
+
+    /**
+     * 获取动作
+     * 
+     * @param actionId 动作ID
+     * @return 动作对象，如果不存在返回null
+     */
+    public Action getAction(String actionId) {
+        return actionStore.get(actionId);
+    }
+
+    /**
+     * 获取所有动作
+     * 
+     * @return 动作列表
+     */
+    public List<Action> getAllActions() {
+        return new ArrayList<>(actionStore.values());
+    }
+
+    /**
+     * 获取动作映射
+     * 
+     * @return 动作ID -> 动作对象的映射
+     */
+    public Map<String, Action> getActionMap() {
+        return new HashMap<>(actionStore);
+    }
+
+    /**
+     * 获取启用的动作列表
+     * 
+     * @return 启用的动作列表
+     */
+    public List<Action> getEnabledActions() {
+        return actionStore.values().stream()
+            .filter(a -> Boolean.TRUE.equals(a.getEnabled()))
+            .collect(Collectors.toList());
+    }
+
+    /**
+     * 根据类型获取动作
+     * 
+     * @param actionType 动作类型
+     * @return 动作列表
+     */
+    public List<Action> getActionsByType(Action.ActionType actionType) {
+        return actionStore.values().stream()
+            .filter(a -> actionType.equals(a.getActionType()))
+            .collect(Collectors.toList());
+    }
+
+    /**
+     * 根据领域获取动作
+     * 
+     * @param domain 领域名称
+     * @return 动作列表
+     */
+    public List<Action> getActionsByDomain(String domain) {
+        return actionStore.values().stream()
+            .filter(a -> domain.equals(a.getDomain()))
+            .collect(Collectors.toList());
+    }
+
+    /**
+     * 根据概念获取动作
+     * 
+     * @param conceptId 概念ID
+     * @return 动作列表
+     */
+    public List<Action> getActionsByConcept(String conceptId) {
+        return actionStore.values().stream()
+            .filter(a -> conceptId.equals(a.getConceptId()))
+            .collect(Collectors.toList());
+    }
+
+    /**
+     * 删除动作
+     * 
+     * @param actionId 动作ID
+     */
+    public void deleteAction(String actionId) {
+        actionStore.remove(actionId);
+        log.debug("Action deleted: {}", actionId);
+    }
+
+    /**
+     * 搜索动作
+     * 
+     * 支持按名称和描述进行模糊搜索。
+     * 
+     * @param keyword 搜索关键词
+     * @return 匹配的动作列表
+     */
+    public List<Action> searchActions(String keyword) {
+        if (keyword == null || keyword.isEmpty()) {
+            return getAllActions();
+        }
+        
+        String lowerKeyword = keyword.toLowerCase();
+        return actionStore.values().stream()
+            .filter(a -> a.getActionName() != null && a.getActionName().toLowerCase().contains(lowerKeyword) ||
+                        a.getActionNameEn() != null && a.getActionNameEn().toLowerCase().contains(lowerKeyword) ||
+                        a.getDescription() != null && a.getDescription().toLowerCase().contains(lowerKeyword))
+            .collect(Collectors.toList());
+    }
+
+    /**
+     * 获取动作数量
+     * 
+     * @return 动作数量
+     */
+    public long getActionCount() {
+        return actionStore.size();
+    }
+
+    /**
      * 更新父子关系
      * 
      * 当保存概念时，自动更新父概念的子概念列表。
@@ -442,12 +587,13 @@ public class OntologyStore {
     /**
      * 清空所有数据
      * 
-     * 清空所有概念、关系和实例，并重新创建默认本体结构。
+     * 清空所有概念、关系、实例和动作，并重新创建默认本体结构。
      */
     public void clearAll() {
         conceptStore.clear();
         relationStore.clear();
         instanceStore.clear();
+        actionStore.clear();
         createDefaultOntology();
         log.info("Ontology store cleared and reinitialized");
     }
@@ -462,6 +608,7 @@ public class OntologyStore {
         ontology.put("concepts", conceptStore.values());
         ontology.put("relations", relationStore.values());
         ontology.put("instances", instanceStore.values());
+        ontology.put("actions", actionStore.values());
         ontology.put("exportTime", System.currentTimeMillis());
         return JSON.toJSONString(ontology);
     }
@@ -499,6 +646,15 @@ public class OntologyStore {
                 for (Map<String, Object> map : instanceMaps) {
                     Instance instance = JSON.parseObject(JSON.toJSONString(map), Instance.class);
                     saveInstance(instance);
+                }
+            }
+
+            @SuppressWarnings("unchecked")
+            List<Map<String, Object>> actionMaps = (List<Map<String, Object>>) ontology.get("actions");
+            if (actionMaps != null) {
+                for (Map<String, Object> map : actionMaps) {
+                    Action action = JSON.parseObject(JSON.toJSONString(map), Action.class);
+                    saveAction(action);
                 }
             }
 

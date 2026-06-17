@@ -158,7 +158,7 @@ moer-search/
 
 - JDK 11+
 - Maven 3.6+
-- Elasticsearch 7.x（推荐 7.17.x）
+- Elasticsearch 服务已适配不同版本，推荐使用7.x17.x版本
 
 ### 配置说明
 
