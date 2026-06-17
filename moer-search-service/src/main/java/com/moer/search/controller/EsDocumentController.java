@@ -2,6 +2,7 @@ package com.moer.search.controller;
 
 
 import com.moer.search.entity.BatchDocument;
+import com.moer.search.entity.PageInfoDTO;
 import com.moer.search.entity.RestResult;
 import com.moer.search.entity.RequestDslDTO;
 import com.moer.search.entity.SearchRequestDTO;
@@ -172,12 +173,35 @@ public class EsDocumentController {
     /**
      * 搜索索引数据
      *
-     * @param searchRequest 检索条件
+     * @param indexName     索引名称
+     * @param searchRequest 检索条件（JSON格式）
+     * @param pageNum       页码（URL参数，可选，优先于请求体中的分页参数）
+     * @param pageSize      每页大小（URL参数，可选，优先于请求体中的分页参数）
      * @return
      */
     @ApiOperation(value = "搜索索引数据")
     @PostMapping("/searchDocuments/{indexName}")
-    public RestResult searchDocuments(@PathVariable String indexName, @RequestBody SearchRequestDTO searchRequest) {
+    public RestResult searchDocuments(
+            @PathVariable String indexName,
+            @RequestBody SearchRequestDTO searchRequest,
+            @RequestParam(value = "pageNum", required = false) Integer pageNum,
+            @RequestParam(value = "pageSize", required = false) Integer pageSize) {
+        
+        // 如果URL参数存在，覆盖请求体中的分页参数
+        if (pageNum != null || pageSize != null) {
+            PageInfoDTO pageInfo = searchRequest.getPageInfo();
+            if (pageInfo == null) {
+                pageInfo = new PageInfoDTO();
+                searchRequest.setPageInfo(pageInfo);
+            }
+            if (pageNum != null) {
+                pageInfo.setCurrentPage(pageNum);
+            }
+            if (pageSize != null) {
+                pageInfo.setPageSize(pageSize);
+            }
+        }
+        
         return RestResult.success(esOperatorInterface.searchDocuments(searchRequest, indexName));
     }
 

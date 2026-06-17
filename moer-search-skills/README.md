@@ -65,7 +65,7 @@ prompt = prompt.replace("{{query}}", "手机");
 ## 目录结构
 
 ```
-moer-service-skills/
+moer-search-skills/
 ├── skills/
 │   ├── ecommerce-skill.md    # 电商搜索 Skill
 │   ├── academic-skill.md     # 学术搜索 Skill
