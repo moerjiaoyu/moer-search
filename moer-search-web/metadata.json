@@ -1,0 +1,8 @@
+{
+  "name": "Moer Search 功能验证平台",
+  "description": "Moer Search 全功能验证页面，包括索引管理、文档管理、集成AI能力、本体管理、系统监控及API测试工具。",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
