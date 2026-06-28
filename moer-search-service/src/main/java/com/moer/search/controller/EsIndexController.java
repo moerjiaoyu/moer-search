@@ -164,4 +164,26 @@ public class EsIndexController {
                                            @PathVariable String alias) {
         return RestResult.success(esIndexOperatorInterface.removeAlias(indexName, alias));
     }
+
+    /**
+     * 获取集群健康状态
+     *
+     * @return 集群健康信息，包含状态、节点数、索引数等
+     */
+    @ApiOperation(value = "获取集群健康状态")
+    @GetMapping("/cluster/health")
+    public RestResult<Map<String, Object>> getClusterHealth() {
+        return RestResult.success(esIndexOperatorInterface.getClusterHealth());
+    }
+
+    /**
+     * 获取集群统计信息
+     *
+     * @return 集群统计信息，包含索引数、文档数、存储大小、JVM内存使用等
+     */
+    @ApiOperation(value = "获取集群统计信息")
+    @GetMapping("/cluster/stats")
+    public RestResult<Map<String, Object>> getClusterStats() {
+        return RestResult.success(esIndexOperatorInterface.getClusterStats());
+    }
 }

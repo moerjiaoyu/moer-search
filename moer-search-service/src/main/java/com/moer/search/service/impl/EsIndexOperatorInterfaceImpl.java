@@ -313,6 +313,66 @@ public class EsIndexOperatorInterfaceImpl implements EsIndexOperatorInterface {
         return false;
     }
 
+    @Override
+    public Map<String, Object> getClusterHealth() {
+        Map<String, Object> map = new HashMap<>();
+        EsDetail esDetail = new EsDetail();
+        try {
+            long start = System.currentTimeMillis();
+            long clientStart = System.currentTimeMillis();
+            ClientInterface clientUtil = ElasticSearchHelper.getRestClientUtil();
+            String result = clientUtil.getClient().executeHttp("/_cluster/health", ClientUtil.HTTP_GET);
+            log.info("集群健康状态响应参数：{}", result);
+            if (StringUtils.isEmpty(result)) {
+                return null;
+            }
+            map = JSONObject.parseObject(result, Map.class);
+            long clientTime = System.currentTimeMillis() - clientStart;
+            esDetail.setClientConnectionTime(clientTime);
+            long betweenDate = System.currentTimeMillis() - start;
+            esDetail.setTook(betweenDate);
+            esDetail.setIsTimedOut(false);
+            StackTraceElement stackTraceElement = Thread.currentThread().getStackTrace()[1];
+            esDetail.setOperation(operation(stackTraceElement));
+            return map;
+        } catch (Exception e) {
+            ExceptionUtils.exception(esDetail, e);
+            return null;
+        } finally {
+            EsThreadLocal.setEsDetail(Collections.singletonList(esDetail));
+        }
+    }
+
+    @Override
+    public Map<String, Object> getClusterStats() {
+        Map<String, Object> map = new HashMap<>();
+        EsDetail esDetail = new EsDetail();
+        try {
+            long start = System.currentTimeMillis();
+            long clientStart = System.currentTimeMillis();
+            ClientInterface clientUtil = ElasticSearchHelper.getRestClientUtil();
+            String result = clientUtil.getClient().executeHttp("/_cluster/stats", ClientUtil.HTTP_GET);
+            log.info("集群统计信息响应参数：{}", result);
+            if (StringUtils.isEmpty(result)) {
+                return null;
+            }
+            map = JSONObject.parseObject(result, Map.class);
+            long clientTime = System.currentTimeMillis() - clientStart;
+            esDetail.setClientConnectionTime(clientTime);
+            long betweenDate = System.currentTimeMillis() - start;
+            esDetail.setTook(betweenDate);
+            esDetail.setIsTimedOut(false);
+            StackTraceElement stackTraceElement = Thread.currentThread().getStackTrace()[1];
+            esDetail.setOperation(operation(stackTraceElement));
+            return map;
+        } catch (Exception e) {
+            ExceptionUtils.exception(esDetail, e);
+            return null;
+        } finally {
+            EsThreadLocal.setEsDetail(Collections.singletonList(esDetail));
+        }
+    }
+
     private String operation(StackTraceElement stackTraceElement) {
         return stackTraceElement.getClassName() + "." + stackTraceElement.getMethodName() + "(...)";
     }

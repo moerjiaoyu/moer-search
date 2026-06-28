@@ -124,12 +124,20 @@ export default function DashboardView({ cluster, onNavigate, isLoading }: Dashbo
           <div className="space-y-1">
             <p className="text-xs font-mono text-slate-400 uppercase tracking-wider">系统健康状况</p>
             <p className="text-xl font-semibold text-slate-900 flex items-center gap-2">
-              <span className="inline-block w-3 h-3 rounded-full bg-emerald-500"></span>
-              稳定绿色
+              <span className={`inline-block w-3 h-3 rounded-full ${
+                cluster.status === "GREEN" ? "bg-emerald-500" : 
+                cluster.status === "YELLOW" ? "bg-amber-500" : "bg-rose-500"
+              }`}></span>
+              {cluster.status === "GREEN" ? "稳定绿色" : 
+               cluster.status === "YELLOW" ? "警告黄色" : "异常红色"}
             </p>
-            <p className="text-xs text-slate-500 font-mono">5/5 节点处于就绪状态</p>
+            <p className="text-xs text-slate-500 font-mono">{cluster.nodesCount}/{cluster.nodesCount} 节点处于就绪状态</p>
           </div>
-          <div className="p-3 bg-emerald-50 rounded-xl border border-emerald-100 text-emerald-600">
+          <div className={`p-3 rounded-xl border ${
+            cluster.status === "GREEN" ? "bg-emerald-50 border-emerald-100 text-emerald-600" : 
+            cluster.status === "YELLOW" ? "bg-amber-50 border-amber-100 text-amber-600" : 
+            "bg-rose-50 border-rose-100 text-rose-600"
+          }`}>
             <Server className="w-6 h-6" />
           </div>
         </div>

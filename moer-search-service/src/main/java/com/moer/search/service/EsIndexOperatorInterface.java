@@ -102,5 +102,19 @@ public interface EsIndexOperatorInterface {
      */
     Boolean removeAlias(String indexName, String alias);
 
+    /**
+     * 获取集群健康状态
+     *
+     * @return 集群健康信息，包含状态、节点数等
+     */
+    Map<String, Object> getClusterHealth();
+
+    /**
+     * 获取集群统计信息
+     *
+     * @return 集群统计信息，包含索引数、文档数、存储大小等
+     */
+    Map<String, Object> getClusterStats();
+
 
 }

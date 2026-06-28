@@ -567,13 +567,13 @@ app.post("/api/model/test-prompt", async (req, res) => {
 });
 
 // --- CLUSTER INFO ---
-app.get("/api/cluster", (req, res) => {
+app.get("/api/cluster", async (req, res) => {
   const hasLiveGemini = !!process.env.GEMINI_API_KEY;
   const totalStorage = indexes.reduce((acc, curr) => acc + curr.storageBytes, 0);
   const totalDocs = documents.length;
 
-  const cluster = {
-    status: "GREEN",
+  let cluster = {
+    status: "GREEN" as const,
     nodesCount: 5,
     indexesCount: indexes.length,
     docsCount: totalDocs,
@@ -584,10 +584,56 @@ app.get("/api/cluster", (req, res) => {
     hasLiveGemini
   };
 
-  res.json({
-    cluster,
-    hasLiveGemini
-  });
+  try {
+    const healthResult = await fetchFromService(`${MOER_SEARCH_SERVICE_URL}/v1/api/index/cluster/health`);
+    const statsResult = await fetchFromService(`${MOER_SEARCH_SERVICE_URL}/v1/api/index/cluster/stats`);
+
+    if (healthResult && typeof healthResult === "object" && "data" in healthResult) {
+      const healthData = (healthResult as any).data;
+      const rawStatus = healthData.status;
+      const normalizedStatus = typeof rawStatus === "string" 
+        ? rawStatus.toUpperCase() 
+        : "GREEN";
+      cluster = {
+        ...cluster,
+        status: normalizedStatus,
+        nodesCount: healthData.number_of_nodes || healthData.number_of_data_nodes || 1
+      };
+    }
+
+    if (statsResult && typeof statsResult === "object" && "data" in statsResult) {
+      const statsData = (statsResult as any).data;
+      const indicesStats = statsData.indices || {};
+      const nodesStats = statsData.nodes || {};
+      const jvmStats = nodesStats.jvm || {};
+      const jvmMemStats = jvmStats.mem || {};
+      
+      const totalShards = indicesStats.shards || {};
+      const totalDocs = indicesStats.docs || {};
+      const totalStore = indicesStats.store || {};
+
+      cluster = {
+        ...cluster,
+        indexesCount: indicesStats.count || cluster.indexesCount,
+        docsCount: totalDocs.count || cluster.docsCount,
+        storageUsageBytes: totalStore.size_in_bytes || totalStore.size || cluster.storageUsageBytes,
+        jvmMemoryPercent: jvmMemStats.heap_max_in_bytes && jvmMemStats.heap_used_in_bytes 
+          ? Math.round((jvmMemStats.heap_used_in_bytes / jvmMemStats.heap_max_in_bytes) * 100) 
+          : cluster.jvmMemoryPercent
+      };
+    }
+
+    res.json({
+      cluster,
+      hasLiveGemini
+    });
+  } catch (error) {
+    console.error("Failed to fetch cluster info from moer-search-service:", error);
+    res.json({
+      cluster,
+      hasLiveGemini
+    });
+  }
 });
 
 app.get("/api/cluster/info", (req, res) => {
